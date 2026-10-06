@@ -72,3 +72,22 @@ class Visit(models.Model):
 
     def __str__(self):
         return f"{self.patient} - {self.visit_date}"
+
+class FollowUpContact(models.Model):
+    patient = models.ForeignKey(
+        Patient,
+        on_delete=models.PROTECT,
+        related_name="follow_up_contacts",
+    )
+    contacted_at = models.DateTimeField()
+    note = models.TextField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-contacted_at", "-id"]
+        indexes = [
+            models.Index(fields=["patient", "-contacted_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.patient} - {self.contacted_at}"

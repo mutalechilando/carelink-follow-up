@@ -1,9 +1,9 @@
 from datetime import timedelta
 
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Subquery
 from django.utils import timezone
 
-from .models import Visit
+from .models import FollowUpContact, Visit
 
 
 def get_follow_up_visits(
@@ -37,11 +37,18 @@ def get_follow_up_visits(
         visit_date__gt=OuterRef("next_appointment_date"),
     )
 
+    last_contact = FollowUpContact.objects.filter(
+        patient_id=OuterRef("patient_id"),
+    ).order_by("-contacted_at", "-id")
+
     visits = (
         Visit.objects
         .select_related("patient", "patient__facility")
         .annotate(
             has_later_visit=Exists(later_visit),
+            last_contact_attempt=Subquery(
+                last_contact.values("contacted_at")[:1]
+            ),
         )
         .filter(
             has_later_visit=False,

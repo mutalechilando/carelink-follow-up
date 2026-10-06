@@ -1,6 +1,6 @@
 import uuid
 
-from django.http import JsonResponse
+from rest_framework.response import Response
 
 
 class CorrelationIdMiddleware:
@@ -28,7 +28,7 @@ def api_error(
     correlation_id,
     status,
 ):
-    return JsonResponse(
+    return Response(
         {
             "error": {
                 "code": code,

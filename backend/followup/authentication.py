@@ -48,3 +48,6 @@ class StaticTokenAuthentication(BaseAuthentication):
             ),
             token,
         )
+
+    def authenticate_header(self, request):
+        return "Token"

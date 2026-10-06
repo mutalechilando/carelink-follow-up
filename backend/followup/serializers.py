@@ -48,4 +48,12 @@ class FollowUpSerializer(serializers.ModelSerializer):
         return "due_soon"
 
     def get_last_contact_attempt(self, obj):
-        return None
+        return obj.last_contact_attempt
+
+class FollowUpContactSerializer(serializers.Serializer):
+    contacted_at = serializers.DateTimeField()
+    note = serializers.CharField(
+        max_length=1000,
+        allow_blank=False,
+        trim_whitespace=True,
+    )

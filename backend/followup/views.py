@@ -1,10 +1,13 @@
 import logging
 
-from django.http import JsonResponse
+from django.db import transaction
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .middleware import api_error
-from .serializers import FollowUpSerializer
+from .models import FollowUpContact, Patient
+from .serializers import FollowUpContactSerializer, FollowUpSerializer
 from .services import get_follow_up_visits
 
 
@@ -154,7 +157,7 @@ class FollowUpListView(APIView):
             },
         )
 
-        return JsonResponse(
+        return Response(
             {
                 "results": serializer.data,
                 "pagination": {
@@ -167,3 +170,63 @@ class FollowUpListView(APIView):
                 },
             }
         )
+
+class FollowUpContactView(APIView):
+    def post(self, request, pk):
+        correlation_id = request.correlation_id
+        user = request.user
+
+        try:
+            patient = Patient.objects.select_related("facility").get(pk=pk)
+        except Patient.DoesNotExist:
+            return api_error(
+                code="NOT_FOUND",
+                message="Patient was not found.",
+                correlation_id=correlation_id,
+                status=404,
+            )
+
+        if user.role != "CLINICIAN":
+            return api_error(
+                code="FORBIDDEN",
+                message="Only clinicians can record follow-up contacts.",
+                correlation_id=correlation_id,
+                status=403,
+            )
+
+        if patient.facility.facility_id != user.facility_id:
+            return api_error(
+                code="FORBIDDEN",
+                message="Clinicians can only update their own facility.",
+                correlation_id=correlation_id,
+                status=403,
+            )
+
+        serializer = FollowUpContactSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return api_error(
+                code="INVALID_REQUEST",
+                message="Invalid contact details.",
+                correlation_id=correlation_id,
+                status=400,
+            )
+
+        with transaction.atomic():
+            FollowUpContact.objects.create(
+                patient=patient,
+                contacted_at=serializer.validated_data["contacted_at"],
+                note=serializer.validated_data["note"],
+            )
+
+        logger.info(
+            "Follow-up contact recorded",
+            extra={
+                "correlation_id": correlation_id,
+                "patient_id": patient.id,
+                "facility_id": patient.facility.facility_id,
+                "role": user.role,
+            },
+        )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
