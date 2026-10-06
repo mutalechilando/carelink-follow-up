@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getFollowUps } from '../api/followUpApi'
+import { getFollowUps,
+    recordFollowUpContact,
+ } from '../api/followUpApi'
 import { StatusBadge } from '../components/StatusBadge'
+import { ContactDialog } from '../components/ContactDialog'
 import type {
   FollowUpPatient,
   FollowUpStatus,
@@ -29,6 +32,7 @@ export function FollowUpPage() {
   const [patients, setPatients] = useState<FollowUpPatient[]>([])
   const [status, setStatus] = useState<FollowUpStatus>('overdue')
   const [facilityId, setFacilityId] = useState('')
+  const [contactPatient, setContactPatient] = useState<FollowUpPatient | null>(null)
   const [sort, setSort] = useState<SortOption>('days_overdue')
   const [page, setPage] = useState(1)
 
@@ -64,6 +68,23 @@ export function FollowUpPage() {
       setLoading(false)
     }
   }, [facilityId, status, sort, page])
+
+  const handleContactSubmit = async (
+    contactedAt: string,
+    note: string,
+  ) => {
+    if (!contactPatient) {
+      return
+    }
+  
+    await recordFollowUpContact(
+      contactPatient.id,
+      contactedAt,
+      note,
+    )
+  
+    await loadFollowUps()
+  }
 
   useEffect(() => {
     void loadFollowUps()
@@ -267,8 +288,8 @@ export function FollowUpPage() {
                       <td>
                         <button
                           type="button"
-                          className="secondary-button"
-                          aria-label={`Record contact for ${patient.first_name} ${patient.last_name}`}
+                          className="button button--primary"
+                          onClick={() => setContactPatient(patient)}
                         >
                           Contact
                         </button>
@@ -306,6 +327,14 @@ export function FollowUpPage() {
                   Next
                 </button>
               </nav>
+            )}
+
+            {contactPatient && (
+              <ContactDialog
+                patientName={`${contactPatient.first_name} ${contactPatient.last_name}`}
+                onClose={() => setContactPatient(null)}
+                onSubmit={handleContactSubmit}
+              />
             )}
           </>
         )}

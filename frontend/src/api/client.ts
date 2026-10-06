@@ -24,7 +24,9 @@ export async function apiRequest<T>(
     headers: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
-      Authorization: 'Token district-chembe',
+      Authorization: `Token ${
+        import.meta.env.VITE_API_TOKEN ?? 'district-chembe'
+      }`,
       ...options.headers,
     },
   })
