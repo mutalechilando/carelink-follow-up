@@ -87,6 +87,8 @@ export function FollowUpPage() {
   }
 
   useEffect(() => {
+    // Initial data synchronization: load the worklist when its query changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadFollowUps()
   }, [loadFollowUps])
 
