@@ -2,7 +2,7 @@
 
  1. Review approach
 
-I reviewed both extracts for security, clinical data integrity, scalability, reliability and usability in a clinic.
+I reviewed both extracts against five production concerns: patient confidentiality, clinical data integrity, reliability, scalability and accessibility in the clinic environment.
 
 I have ranked each finding as:
 
@@ -22,12 +22,12 @@ Severity: Critical
 
 
 private static string ConnString =
-"Server=10.20.1.14;Database=carelink;User Id=sa;Password=Carelink2024;";
+"Server=10.20.1.14;Database=carelink;User Id=sa;Password=CareLink#2024;";
 
 
  Problem
 
-The production database address, username and password are embedded directly in source code. The account is also the SQL `sa` account, which suggests excessive database privileges.
+A privileged database credential is hard-coded in source code, including use of the SQL sa account.
 
  Practical clinic risk
 
@@ -56,7 +56,7 @@ User-controlled `facility` and `q` values are concatenated directly into SQL.
 
  Practical clinic risk
 
-A malicious or malformed search value could alter the SQL query. In an EHR this could expose patient records outside the user's intended search or potentially modify/destroy data if the database connection permits it.
+A malicious search value could alter the query and potentially bypass intended filtering or expose records outside the user's authorised scope. The broader risk is amplified because the application is using a highly privileged database account.
 
  Required action
 
@@ -87,7 +87,7 @@ but never uses it to determine whether the user is allowed to access the request
 
 A clinician could potentially change:
 
-text
+
 facility=FAC-0207
 
 
@@ -175,7 +175,7 @@ Severity: Critical
 
 The method performs:
 
-text
+
 INSERT encounter
 UPDATE patient
 
@@ -351,7 +351,7 @@ Check HTTP status and convert API errors into a consistent UI error state.
 
  C2.4 The polling effect has no dependency array
 
-Severity: Critical
+Severity: Major
 
 typescript
 useEffect(() => {
@@ -362,9 +362,7 @@ useEffect(() => {
 
  Problem
 
-The effect executes after every render.
-
-Because `setPatients()` causes another render, new intervals can repeatedly be created.
+The interval is recreated after every render, producing unnecessary setup/teardown and potentially changing the timing of polling; combined with other state updates, this can create excessive request activity and unpredictable polling behaviour.
 
  Practical clinic risk
 
@@ -442,7 +440,7 @@ The effect depends on `patients` and calls `setPatients()` whenever `patients` c
 
  Practical clinic risk
 
-This can produce repeated renders and unnecessary browser work. Combined with the polling effect, it can significantly increase network and CPU activity.
+This creates an unnecessary state-update cycle and risks repeated renders; the sorting should not be implemented as an effect. Combined with the polling effect, it can significantly increase network and CPU activity.
 
  Required action
 
@@ -532,11 +530,11 @@ Await the request, check the response, display failure/retry state and only upda
 
 Severity: Critical
 
-The component makes API calls without showing authentication or authorisation handling.
+No authentication context or authenticated API client is visible in this component. The review therefore requires confirmation that authentication and authorisation are enforced centrally rather than assuming the client is trusted.
 
  Practical clinic risk
 
-Patient information could potentially be exposed to unauthorised users or facilities if the API is not protected elsewhere.
+If the backend does not enforce this independently, patient data could be exposed across facilities.
 
  Required action
 
