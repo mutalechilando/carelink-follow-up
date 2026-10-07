@@ -73,7 +73,7 @@ Activate the virtual environment.
 Windows PowerShell:
 
 ```powershell
-..\ .venv\Scripts\Activate.ps1
+..\.venv\Scripts\Activate.ps1
 ```
 
 Install dependencies:
@@ -82,9 +82,18 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Create a PostgreSQL database and application user, then configure the Django database environment variables as documented in the project configuration.
+Create a PostgreSQL database and application user.
 
-Run migrations:
+Configure the Django database environment variables in PowerShell:
+
+```powershell
+$env:POSTGRES_DB="carelink"
+$env:POSTGRES_USER="carelink_app"
+$env:POSTGRES_PASSWORD="<your-postgres-password>"
+$env:POSTGRES_HOST="localhost"
+$env:POSTGRES_PORT="5432"
+
+Then  migrations:
 
 ```bash
 python manage.py migrate

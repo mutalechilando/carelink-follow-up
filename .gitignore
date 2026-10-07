@@ -34,3 +34,5 @@ Thumbs.db
 # Test/cache
 .pytest_cache/
 coverage/
+# Local environment setup
+backend/set-env.ps1
