@@ -1,10 +1,10 @@
- CareLink Follow-Up — Technical Assessment
+# CareLink Follow-Up — Technical Assessment
 
- 1. What I Built
+## 1. What I Built
 
 This submission implements a working vertical slice of the CareLink patient follow-up workflow.
 
- Backend
+### Backend
 
 - Django 5.2 + Django REST Framework API.
 - PostgreSQL database.
@@ -23,7 +23,7 @@ This submission implements a working vertical slice of the CareLink patient foll
 - Seed data matching the assessment scenario.
 - Automated backend tests covering service logic, API behaviour, permissions and query efficiency.
 
- Frontend
+### Frontend
 
 - React + TypeScript + Vite.
 - Typed API service layer separating HTTP calls from presentation components.
@@ -33,9 +33,7 @@ This submission implements a working vertical slice of the CareLink patient foll
 - Status displayed using text as well as visual styling.
 - Keyboard-accessible semantic controls and table structure.
 
-
-
- 2. What Is Stubbed / Deliberately Simplified
+## 2. What Is Stubbed / Deliberately Simplified
 
 This is an assessment vertical slice rather than a production national EHR.
 
@@ -45,32 +43,28 @@ This is an assessment vertical slice rather than a production national EHR.
 - The external laboratory and national reporting integrations are architectural boundaries/stubs rather than live integrations.
 - Production deployment, monitoring infrastructure and in-country hosting are described in the architecture but are not provisioned in this repository.
 
+## 3. Stack and Rationale
 
-
- 3. Stack and Rationale
-
-Backend: Python, Django, Django REST Framework and PostgreSQL.
+**Backend:** Python, Django, Django REST Framework and PostgreSQL.
 
 Django/DRF provides a mature API and database framework with strong validation, transactions and security features. PostgreSQL provides reliable relational constraints and indexing appropriate for clinical data.
 
-Frontend: React, TypeScript and Vite.
+**Frontend:** React, TypeScript and Vite.
 
 React supports a maintainable component model, while TypeScript reduces errors at the API/UI boundary. Vite keeps the assessment frontend simple and fast to build.
 
-Testing: pytest/pytest-django for backend tests and TypeScript/ESLint build checks for frontend quality.
+**Testing:** pytest/pytest-django for backend tests and TypeScript/ESLint build checks for frontend quality.
 
+## 4. Running from a Clean Machine
 
-
- 4. Running from a Clean Machine
-
- Prerequisites
+### Prerequisites
 
 - Python 3.14+
 - Node.js 24+
 - PostgreSQL 17+
 - npm
 
- Backend
+### Backend
 
 From the repository:
 
@@ -93,7 +87,7 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
- PostgreSQL
+### PostgreSQL
 
 Create a PostgreSQL application user and database. For example, from `psql` as a PostgreSQL administrator:
 
@@ -139,7 +133,7 @@ The API will be available at:
 http://127.0.0.1:8000/
 ```
 
- Backend tests
+### Backend tests
 
 Run:
 
@@ -153,14 +147,12 @@ The expected result for the submitted implementation is:
 13 passed
 ```
 
-
-
- 5. Demo Authentication
+## 5. Demo Authentication
 
 The assessment implementation uses static tokens to represent authenticated users.
 
 | Token | Role | Facility scope |
-||||
+|---|---|---|
 | `clinician-mwansa` | Clinician | `FAC-0101` |
 | `clinician-kalemba` | Clinician | `FAC-0207` |
 | `district-chembe` | District Officer | All facilities |
@@ -169,9 +161,7 @@ These are assessment-only credentials and are not intended for production use.
 
 The production design replaces these static tokens with OIDC/OAuth2 and centrally managed identity and access controls.
 
-
-
- 6. Frontend
+## 6. Frontend
 
 In a second terminal:
 
@@ -214,9 +204,7 @@ npm run lint
 npm run build
 ```
 
-
-
- 7. Follow-Up Rule and Assumptions
+## 7. Follow-Up Rule and Assumptions
 
 The assessment rule was interpreted as:
 
@@ -233,17 +221,15 @@ I also assumed:
 - pagination is required at API level rather than loading 10,000+ patients into the browser;
 - patient follow-up records are facility-scoped for clinicians.
 
- Additional schema elements
+### Additional schema elements
 
 The implementation adds a `Facility` model to support facility-scoped access and filtering, and a `FollowUpContact` model to record contact activity without modifying the underlying visit history.
 
 Additional database indexes and constraints support facility filtering, follow-up queries and data integrity.
 
+## 8. API Contract
 
-
- 8. API Contract
-
- Follow-up list
+### Follow-up list
 
 ```text
 GET /api/follow-up
@@ -264,7 +250,7 @@ Example:
 GET /api/follow-up?facility_id=FAC-0101&status=overdue&sort=days_overdue_desc&page=1&page_size=50
 ```
 
- Record contact
+### Record contact
 
 ```text
 POST /api/follow-up/{id}/contacted
@@ -281,7 +267,7 @@ Example body:
 
 A successful request returns HTTP `204`.
 
- Error format
+### Error format
 
 Errors use a consistent structure:
 
@@ -295,9 +281,7 @@ Errors use a consistent structure:
 }
 ```
 
-
-
- 9. What I Left Out and What I Would Do Next
+## 9. What I Left Out and What I Would Do Next
 
 The main production capability left out is the full offline-first synchronization implementation. This was deliberately separated from the assessment's follow-up vertical slice because it requires additional client, server and conflict-resolution infrastructure.
 
@@ -310,23 +294,19 @@ Next steps would be:
 5. Add production observability, security controls and deployment automation.
 6. Conduct performance and offline synchronization testing at representative national scale.
 
-
-
- 10. Accessibility Decisions
+## 10. Accessibility Decisions
 
 Three specific accessibility decisions were made:
 
-1. Semantic controls: filters, buttons and actions use native HTML controls rather than clickable `div` elements, supporting keyboard and assistive technology use.
-2. Accessible status communication: follow-up status is represented with text and labels rather than relying on colour alone.
-3. Associated labels and announcements: form controls have explicit labels, the contact dialog has an accessible name, and errors are exposed through an appropriate alert mechanism.
+1. **Semantic controls:** filters, buttons and actions use native HTML controls rather than clickable `div` elements, supporting keyboard and assistive technology use.
+2. **Accessible status communication:** follow-up status is represented with text and labels rather than relying on colour alone.
+3. **Associated labels and announcements:** form controls have explicit labels, the contact dialog has an accessible name, and errors are exposed through an appropriate alert mechanism.
 
- One thing deliberately not done
+### One thing deliberately not done
 
 I did not implement a complete automated accessibility test suite, such as axe-based browser testing, within the assessment timeframe. The interface was instead built around semantic HTML and explicit accessibility considerations.
 
-
-
- 11. Repository Structure
+## 11. Repository Structure
 
 The main submission components are:
 
@@ -347,13 +327,12 @@ frontend/
 
 The backend contains the Django application, migrations, seed command and automated tests. The frontend contains the React/TypeScript application and API service layer.
 
-
-
- 12. Assessment Scope
+## 12. Assessment Scope
 
 The repository intentionally distinguishes between:
 
-Implemented and tested
+### Implemented and tested
+
 - Follow-up API
 - PostgreSQL data model
 - Follow-up calculation
@@ -365,7 +344,8 @@ Implemented and tested
 - Backend automated tests
 - Frontend lint and production build
 
-Designed but not implemented
+### Designed but not implemented
+
 - Production identity provider
 - Full offline-first synchronisation
 - Durable client outbox
