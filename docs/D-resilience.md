@@ -29,13 +29,14 @@ status
 result/reference
 created_at
 
+The idempotency record and the business mutation must be committed in the same database transaction, so the server cannot record an operation as processed while failing to persist the corresponding clinical change.
 
 The server enforces uniqueness on the operation identity.
 
 For example:
 
 
-(device_id, operation_id) UNIQUE
+(device_id, operation_id) is unique, or a globally unique operation ID is enforced directly, depending on the chosen identifier scheme.
 
 
 If the same operation is received again, the server does not create another visit. It returns the result of the original operation.
@@ -123,6 +124,8 @@ The server must retain idempotency records for at least as long as an operation 
 For this environment I would initially retain them for 90 days after successful processing, with the period configurable by operational policy.
 
 The 90-day period should be longer than the expected maximum offline period plus reasonable device recovery/retry time.
+
+The retention period should be longer than the maximum supported offline/replay window, with monitoring and an explicit quarantine path for devices that exceed that window.
 
 The client should also retain acknowledged operation metadata locally until it has confirmed synchronisation and completed its local cleanup policy.
 
@@ -243,6 +246,7 @@ The local cache should have a defined retention period. I would initially use:
 
 - active operational data: retained while needed for offline operation;
 - stale data: expired after a configurable period such as 30 days;
+The 30-day figure is a local retention ceiling, not a freshness guarantee. The UI must show the last successful synchronisation time, and workflows requiring current information should be restricted when data exceeds the clinically acceptable freshness window.
 - completed/acknowledged outbox records: retained locally only as long as required for reconciliation and audit support.
 
 The exact retention period should be validated against Ministry clinical, legal and records-retention requirements.
@@ -328,7 +332,7 @@ If the server returns `Retry-After`, the client should respect it.
 
  Partial failure
 
-A queue containing 100 operations may successfully process 72 and fail on 28.
+A queue containing 100 operations. 72 changes synchronised. 20 are waiting to retry. 8 require review.
 
 The client must not roll back the 72 successful operations.
 
@@ -415,7 +419,11 @@ The UI should show enough information for an authorised user to understand what 
 
 The system should decide automatically only for fields where the business rules make the merge unambiguous.
 
+Append-only events should normally be merged automatically; competing clinical facts should be routed according to predefined clinical conflict rules.
+
 For clinically significant conflicting fields, the authorised clinical/records user decides.
+
+The merged record must retain provenance showing which source record each historical clinical event originated from.
 
 The server remains the authority for the final stored record, but the business rule determines who is permitted to resolve the conflict.
 
@@ -476,6 +484,7 @@ When connectivity returns, the application must revalidate:
 - device status;
 - application version.
 
+Client-side role checks are a usability control only; the national API remains the authoritative security boundary whenever connectivity is available.
 
 
  6. Data I Would Refuse to Store Locally
