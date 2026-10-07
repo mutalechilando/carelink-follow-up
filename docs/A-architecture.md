@@ -9,7 +9,7 @@ I would use an offline-first client with a nationally hosted modular application
 The core principles are:
 
 - The facility must be able to continue essential follow-up work without a network connection.
-- The national system is the authoritative source for nationally shared data and reporting.
+- The national platform is the authoritative system of record, but it does not automatically win every conflict. Conflicts are detected using entity versions and resolved according to workflow-specific rules; high-risk clinical conflicts require explicit review rather than silent last-write-wins behaviour.
 - Synchronisation must be explicit, observable and idempotent.
 - APIs must remain backward-compatible so facilities can be upgraded progressively.
 - PHI must be protected in transit, at rest and in operational logs.
@@ -100,6 +100,8 @@ The modules have clear ownership boundaries while sharing one transactional data
 PostgreSQL is the primary transactional store for the national system. It maintains authoritative national records, synchronisation state, audit information and reporting data.
 
 Indexes, database-side filtering and pagination are important because the system must support approximately 3,000 concurrent weekday-morning users.
+
+The 3,000 concurrent-user target is not addressed by simply adding application servers. Query patterns are designed first for indexed, bounded result sets, with connection pooling, horizontal application scaling and load testing against realistic morning-peak workloads.
 
  Integration layer
 
@@ -242,7 +244,7 @@ The client authenticates against the identity service and receives an access tok
 
 The client cannot contact the identity provider, so it must not simply accept arbitrary credentials indefinitely.
 
-A practical approach is to permit an already-authenticated device/user to continue using a limited offline session for a controlled period, using securely stored refresh/session credentials protected by the device.
+A previously authenticated device may receive a time-limited offline session credential protected by the device/runtime's secure storage mechanism. The exact mechanism will depend on whether the supported client is a browser/PWA or controlled device runtime.
 
 Offline access should be:
 
@@ -498,8 +500,9 @@ The nine-month delivery window should be staged:
 1. Months 1–2: architecture validation, identity model, data model, offline prototype and integration contracts.
 2. Months 3–5: core Follow-Up workflows, synchronisation, security controls and laboratory/reporting adapters.
 3. Months 6–7: performance testing, offline testing and pilot deployment.
-4. Month 8: pilot facilities, security testing, operational readiness and remediation.
-5. Month 9: controlled rollout, monitoring and support readiness.
+4. Months 7-8: go/no-go gate: offline recovery, data integrity, security, performance and rollback criteria must pass before expanding beyond pilot facilities.
+5. Month 8: pilot facilities, security testing, operational readiness and remediation.
+6. Month 9: controlled rollout, monitoring and support readiness.
 
 The first technical milestone should not be "the UI is complete". It should be a proven end-to-end offline/online workflow: create or update a follow-up action offline, reconnect after several days, synchronise it safely, resolve a simulated conflict, and demonstrate that the resulting national record is correct and auditable.
 
@@ -507,4 +510,4 @@ The first technical milestone should not be "the UI is complete". It should be a
 
 The most important design decision is to treat connectivity, data integrity and security as part of the clinical workflow rather than infrastructure concerns.
 
-A facility that loses connectivity should experience degraded connectivity, not loss of the ability to work. When it reconnects, its locally recorded work should synchronise safely, exactly once, with clear visibility of any conflicts or outstanding actions.
+A facility that loses connectivity should experience degraded connectivity, not loss of the ability to work. When it reconnects, its locally recorded work should synchronise safely with exactly-once effect, even if the underlying operation is transmitted more than once, with clear visibility of any conflicts or outstanding actions.
